@@ -6,7 +6,6 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -29,12 +28,7 @@ public class TokenProvider {
     @Value("{spring.jwt.secret}")
     private String secretKey;
 
-    /**
-     * 토큰 생성(발급)
-     * @param username
-     * @param roles
-     * @return
-     */
+    // 토큰 생성
     public String generateToken(String username, List<String> roles) {
         // 다음 정보들을 포함한 claims 생성
         //      - username
@@ -43,8 +37,18 @@ public class TokenProvider {
         //      - 만료 시간
         //      - signature
 
-        // jwt 발급
-        throw new NotYetImplementedException();
+        Claims claims = Jwts.claims().setSubject(username);
+        claims.put(KEY_ROLES, roles);
+
+        Date now = new Date();
+        Date expiredDate = new Date(now.getTime() + TOKEN_EXPIRE_TIME);
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setIssuedAt(now)   //토큰 생성 시간
+                .setExpiration(expiredDate) //토큰 만료 시간
+                .signWith(SignatureAlgorithm.HS512, this.secretKey)    //사용할 암호화 알고리즘, 비밀키
+                .compact();
     }
 
     public Authentication getAuthentication(String jwt) {

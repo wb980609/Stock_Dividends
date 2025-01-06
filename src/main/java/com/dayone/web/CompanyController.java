@@ -7,13 +7,14 @@ import com.dayone.service.CompanyService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -25,22 +26,12 @@ public class CompanyController {
 
     private final CacheManager redisCacheManager;
 
-    /**
-     * 자동완성 기능을 위한 prefix 단어 검색 기능
-     * @param keyword
-     * @return
-     */
     @GetMapping("/autocomplete")
     public ResponseEntity<?> autocomplete(@RequestParam String keyword) {
-        var result = this.companyService.getCompanyNamesByKeyword(keyword);
-        return ResponseEntity.ok(result);
+        List<String> keywordList = this.companyService.getCompanyNamesByKeyword(keyword);
+        return ResponseEntity.ok(keywordList);
     }
 
-    /**
-     * 회사 목록 조회
-     * @param pageable
-     * @return
-     */
     @GetMapping
     @PreAuthorize("hasRole('READ')")
     public ResponseEntity<?> searchCompany(final Pageable pageable) {
@@ -48,11 +39,6 @@ public class CompanyController {
         return ResponseEntity.ok(companies);
     }
 
-    /**
-     * 회사 및 배당금 정보 추가
-     * @param request
-     * @return
-     */
     @PostMapping
     @PreAuthorize("hasRole('WRITE')")
     public ResponseEntity<?> addCompany(@RequestBody Company request) {
